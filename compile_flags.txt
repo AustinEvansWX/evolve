@@ -1,0 +1,5 @@
+-Iinclude
+-I/usr/include/ImageMagick-7 
+-fopenmp 
+-DMAGICKCORE_HDRI_ENABLE=1 
+-DMAGICKCORE_QUANTUM_DEPTH=16 
