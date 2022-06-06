@@ -2,6 +2,7 @@
 #include <evolver/creature.hpp>
 #include <evolver/evolver.hpp>
 #include <evolver/genome.hpp>
+#include <functional>
 #include <utils/random.hpp>
 
 #include <Magick++.h>
@@ -14,6 +15,11 @@ using namespace std;
 using namespace Magick;
 
 Evolver::Evolver(EvolverConfig config) { config_ = config; }
+
+void Evolver::AddInput(function<float(Creature creature)> input_func) {
+  input_funcs_.push_back(input_func);
+  input_count_++;
+}
 
 void Evolver::RunSimulation(int generations) {
   rng::PlantSeed();
@@ -56,7 +62,7 @@ void Evolver::SpawnCreatures() {
     Creature creature = Creature{position};
 
     for (int j = 0; j < config_.genome_size; j++) {
-      Gene gene = RandomGene(config_.input_neurons, config_.internal_neurons, config_.output_neurons);
+      Gene gene = RandomGene(input_count_, config_.internal_neurons, config_.output_neurons);
       creature.genome.push_back(gene);
     }
 
@@ -67,7 +73,7 @@ void Evolver::SpawnCreatures() {
 void Evolver::RunGeneration() {
   for (int i = 0; i < config_.generation_steps; i++) {
     for (auto &creature : creatures_) {
-      vector<float> inputs = {Input1(creature), Input2(creature)};
+      vector<float> inputs = GetInputs(creature);
 
       vector<float> internal(config_.internal_neurons);
 
@@ -119,6 +125,14 @@ void Evolver::RunGeneration() {
   }
 }
 
+vector<float> Evolver::GetInputs(Creature creature) {
+  vector<float> inputs;
+  for (auto &input_func : input_funcs_) {
+    inputs.push_back(input_func(creature));
+  }
+  return inputs;
+}
+
 float Evolver::AverageFitness() {
   float sum = 0;
 
@@ -157,7 +171,7 @@ void Evolver::Reproduce() {
     float random = rng::Range(0.0f, 1.0f);
 
     if (random <= config_.mutation_rate) {
-      child.genome[rng::Range(0, config_.genome_size - 1)] = RandomGene(config_.input_neurons, config_.internal_neurons, config_.output_neurons);
+      child.genome[rng::Range(0, config_.genome_size - 1)] = RandomGene(input_count_, config_.internal_neurons, config_.output_neurons);
     }
 
     children.push_back(child);
@@ -166,14 +180,6 @@ void Evolver::Reproduce() {
   }
 
   creatures_ = children;
-}
-
-float Evolver::Input1(Creature creature) {
-  return goal_ < creature.position ? 1 : 0;
-}
-
-float Evolver::Input2(Creature creature) {
-  return goal_ > creature.position ? 1 : 0;
 }
 
 vector<Image> Evolver::GenerateFrames(vector<float> fitness_scores) {
@@ -188,7 +194,7 @@ vector<Image> Evolver::GenerateFrames(vector<float> fitness_scores) {
   vector<Image> frames = {};
 
   for (int i = 0; i < generations; i++) {
-    Image frame = Image(Geometry(500, 300), bg);
+    Image frame = Image(Geometry(width, height), bg);
     vector<Drawable> draw_list;
 
     draw_list.push_back(DrawableFillColor(bar_color));

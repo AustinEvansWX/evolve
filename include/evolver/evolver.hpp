@@ -1,6 +1,7 @@
 #include <evolver/config.hpp>
 #include <evolver/creature.hpp>
 #include <evolver/genome.hpp>
+#include <functional>
 #include <utils/random.hpp>
 
 #include <Magick++.h>
@@ -17,9 +18,12 @@ public:
   EvolverConfig config_;
   vector<Creature> creatures_;
   float goal_;
-  vector<Image> animationFrames_;
+  int input_count_ = 0;
+  vector<function<float(Creature creature)>> input_funcs_;
 
   Evolver(EvolverConfig config);
+
+  void AddInput(function<float(Creature creature)> input_func);
 
   void RunSimulation(int generations);
 
@@ -29,6 +33,8 @@ private:
   void SpawnCreatures();
 
   void RunGeneration();
+
+  vector<float> GetInputs(Creature creature);
 
   float AverageFitness();
 
