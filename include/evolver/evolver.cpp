@@ -21,6 +21,8 @@ void Evolver::RunSimulation(int generations) {
   SetRandomGoal();
   SpawnCreatures();
 
+  vector<float> fitness_scores = {};
+
   for (int i = 0; i < generations; i++) {
     RunGeneration();
     RankCreatures();
@@ -33,12 +35,15 @@ void Evolver::RunSimulation(int generations) {
     cout << "Average Fitness: " << avg_fitness << endl
          << endl;
 
-    animationFrames_.push_back(GenerateFrame());
+    fitness_scores.push_back(avg_fitness);
 
     Reproduce();
+    SetRandomGoal();
   }
 
-  writeImages(animationFrames_.begin(), animationFrames_.end(), "result.gif");
+  vector<Image> frames = GenerateFrames(fitness_scores);
+
+  writeImages(frames.begin(), frames.end(), "result.gif");
 }
 
 void Evolver::SetRandomGoal() {
@@ -171,32 +176,32 @@ float Evolver::Input2(Creature creature) {
   return goal_ > creature.position ? 1 : 0;
 }
 
-Image Evolver::GenerateFrame() {
+vector<Image> Evolver::GenerateFrames(vector<float> fitness_scores) {
   int width = 500;
   int height = 300;
-  int bar_width = width / 50;
+  int generations = fitness_scores.size();
+  int bar_width = width / generations;
+
   ColorHSL bg = ColorHSL(0.61, 0.16, 0.22);
   ColorHSL bar_color = ColorHSL(0.62, 0.16, 0.28);
-  Image image(Geometry(width, height), bg);
 
-  vector<Drawable> draw_list;
+  vector<Image> frames = {};
 
-  draw_list.push_back(DrawableFillColor(bar_color));
+  for (int i = 0; i < generations; i++) {
+    Image frame = Image(Geometry(500, 300), bg);
+    vector<Drawable> draw_list;
 
-  vector<int> distrubution(50);
+    draw_list.push_back(DrawableFillColor(bar_color));
 
-  for (auto &creature : creatures_) {
-    int bar_index = min(49, (int)(creature.position * 50));
-    distrubution[bar_index]++;
+    for (int j = 0; j <= i; j++) {
+      int offset = j * bar_width;
+      int y = height - height * fitness_scores[j];
+      draw_list.push_back(DrawableRectangle(offset, y, offset + bar_width, height));
+    }
+
+    frame.draw(draw_list);
+    frames.push_back(frame);
   }
 
-  for (int i = 0; i < 50; i++) {
-    int offset = i * bar_width;
-    int y = height - (int)(height * ((float)distrubution[i] / config_.population_size));
-    draw_list.push_back(DrawableRectangle(offset, y, offset + bar_width, height));
-  }
-
-  image.draw(draw_list);
-
-  return image;
+  return frames;
 }

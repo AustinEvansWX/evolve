@@ -6,7 +6,7 @@ using namespace Magick;
 
 int main(int argc, char **argv) {
   InitializeMagick(*argv);
-  Evolver evolver = Evolver({200, 32, 100, 0.00, 2, 1, 2});
+  Evolver evolver = Evolver({200, 6, 100, 0.02, 2, 1, 2});
   evolver.RunSimulation(50);
   return 0;
 }

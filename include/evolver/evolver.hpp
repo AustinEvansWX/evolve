@@ -40,5 +40,5 @@ private:
 
   float Input2(Creature creature);
 
-  Image GenerateFrame();
+  vector<Image> GenerateFrames(vector<float> fitness_scores);
 };
