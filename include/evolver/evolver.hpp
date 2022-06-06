@@ -1,4 +1,5 @@
-#include <evolver/config.hpp>
+#pragma once
+
 #include <evolver/creature.hpp>
 #include <evolver/genome.hpp>
 #include <functional>
@@ -15,11 +16,15 @@ using namespace Magick;
 
 class Evolver {
 public:
-  EvolverConfig config_;
+  unsigned int population_size_;
+  unsigned int genome_size_;
+  unsigned int generation_steps_;
+  float mutation_rate_;
+  unsigned int internal_count_;
   vector<Creature> creatures_;
   float goal_;
 
-  Evolver(EvolverConfig config);
+  Evolver(int population_size, int genome_size, int generation_steps, float mutation_rate, unsigned int internal_count);
 
   int input_count_ = 0;
   int output_count_ = 0;

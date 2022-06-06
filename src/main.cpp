@@ -7,7 +7,7 @@ using namespace Magick;
 
 int main(int argc, char **argv) {
   InitializeMagick(*argv);
-  Evolver evolver = Evolver(EvolverConfig(200, 18, 100, 0.01, 8));
+  Evolver evolver = Evolver(200, 18, 100, 0.01, 8);
 
   evolver.AddInput([&evolver](Creature &creature) {
     return evolver.goal_ < creature.position ? 1.0f : 0.0f;
