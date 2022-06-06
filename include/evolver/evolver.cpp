@@ -16,9 +16,14 @@ using namespace Magick;
 
 Evolver::Evolver(EvolverConfig config) { config_ = config; }
 
-void Evolver::AddInput(function<float(Creature creature)> input_func) {
+void Evolver::AddInput(function<float(Creature &creature)> input_func) {
   input_funcs_.push_back(input_func);
   input_count_++;
+}
+
+void Evolver::AddOutput(function<void(Creature &creature)> output_func) {
+  output_funcs_.push_back(output_func);
+  output_count_++;
 }
 
 void Evolver::RunSimulation(int generations) {
@@ -62,7 +67,7 @@ void Evolver::SpawnCreatures() {
     Creature creature = Creature{position};
 
     for (int j = 0; j < config_.genome_size; j++) {
-      Gene gene = RandomGene(input_count_, config_.internal_neurons, config_.output_neurons);
+      Gene gene = RandomGene(input_count_, config_.internal_neurons, output_count_);
       creature.genome.push_back(gene);
     }
 
@@ -89,7 +94,7 @@ void Evolver::RunGeneration() {
         internal[j] = tanh(internal[j]);
       }
 
-      vector<float> output(config_.output_neurons);
+      vector<float> output(output_count_);
 
       for (auto &gene : creature.genome) {
         if (gene.source_type != 1) {
@@ -99,7 +104,7 @@ void Evolver::RunGeneration() {
         output[gene.sink_id] += internal[gene.source_id] * gene.weight;
       }
 
-      for (int j = 0; j < config_.output_neurons; j++) {
+      for (int j = 0; j < output_count_; j++) {
         output[j] = tanh(output[j]);
 
         float value = output[j];
@@ -109,14 +114,7 @@ void Evolver::RunGeneration() {
         }
 
         if (rng::Range(0.0f, 1.0f) <= value) {
-          switch (j) {
-          case 0:
-            creature.position = max(0.0f, creature.position -= 0.01);
-            break;
-          case 1:
-            creature.position = min(1.0f, creature.position += 0.01);
-            break;
-          }
+          output_funcs_[j](creature);
         }
       }
 
@@ -125,7 +123,7 @@ void Evolver::RunGeneration() {
   }
 }
 
-vector<float> Evolver::GetInputs(Creature creature) {
+vector<float> Evolver::GetInputs(Creature &creature) {
   vector<float> inputs;
   for (auto &input_func : input_funcs_) {
     inputs.push_back(input_func(creature));
@@ -171,7 +169,7 @@ void Evolver::Reproduce() {
     float random = rng::Range(0.0f, 1.0f);
 
     if (random <= config_.mutation_rate) {
-      child.genome[rng::Range(0, config_.genome_size - 1)] = RandomGene(input_count_, config_.internal_neurons, config_.output_neurons);
+      child.genome[rng::Range(0, config_.genome_size - 1)] = RandomGene(input_count_, config_.internal_neurons, output_count_);
     }
 
     children.push_back(child);

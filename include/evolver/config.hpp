@@ -6,5 +6,4 @@ struct EvolverConfig {
   unsigned int generation_steps;
   float mutation_rate;
   unsigned int internal_neurons;
-  unsigned int output_neurons;
 };
