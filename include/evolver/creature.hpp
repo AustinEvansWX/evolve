@@ -6,7 +6,7 @@
 using namespace std;
 
 struct Creature {
-  float position;
-  float fitness;
-  vector<Gene> genome;
+  float position = 0;
+  float fitness = 0;
+  vector<Gene> genome = {};
 };

@@ -1,17 +1,8 @@
-#include <evolver/creature.hpp>
 #include <evolver/evolver.hpp>
-#include <evolver/genome.hpp>
-#include <functional>
+#include <iostream>
 #include <utils/random.hpp>
 
-#include <Magick++.h>
-#include <chrono>
-#include <cmath>
-#include <iostream>
-#include <vector>
-
 using namespace std;
-using namespace Magick;
 
 Evolver::Evolver(int population_size, int genome_size, int generation_steps, float mutation_rate, unsigned int internal_count) {
   population_size_ = population_size;
@@ -178,8 +169,9 @@ void Evolver::Reproduce() {
 }
 
 vector<Image> Evolver::GenerateFrames(vector<float> fitness_scores) {
-  int width = 500;
-  int height = 300;
+  int width = 1000;
+  int height = 600;
+  Geometry frame_size = Geometry(width, height);
   int generations = fitness_scores.size();
   int bar_width = width / generations;
 
@@ -189,8 +181,8 @@ vector<Image> Evolver::GenerateFrames(vector<float> fitness_scores) {
   vector<Image> frames = {};
 
   for (int i = 0; i < generations; i++) {
-    Image frame = Image(Geometry(width, height), bg);
-    DrawableList draw_list;
+    Image frame = Image(frame_size, bg);
+    vector<Drawable> draw_list = {};
 
     draw_list.push_back(DrawableFillColor(bar_color));
 
